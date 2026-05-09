@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
+import Navbar from "@/components/layout/Navbar"; // Navbar ইমপোর্ট করা হলো
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,9 +18,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} min-h-screen bg-gray-50 flex flex-col`}>
         <AuthProvider>
-          {children}
+          <Navbar /> {/* Navbar যুক্ত করা হলো */}
+          <main className="flex-grow">
+            {children}
+          </main>
         </AuthProvider>
       </body>
     </html>
