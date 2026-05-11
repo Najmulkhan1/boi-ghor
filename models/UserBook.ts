@@ -8,6 +8,7 @@ const UserBookSchema = new Schema(
     canRead: { type: Boolean, default: false },
     canDownload: { type: Boolean, default: false },
     lastReadPage: { type: Number, default: 1 },
+    isRead: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

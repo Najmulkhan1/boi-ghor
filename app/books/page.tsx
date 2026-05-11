@@ -5,8 +5,8 @@ import User from "@/models/User"; // User মডেল ইমপোর্ট ক
 
 export const dynamic = "force-dynamic";
 
-export default async function BooksPage({ searchParams }: { searchParams: Promise<{ category?: string, author?: string }> }) {
-  const { category, author } = await searchParams;
+export default async function BooksPage({ searchParams }: { searchParams: Promise<{ category?: string, author?: string,  q?: string}> }) {
+  const { category, author, q } = await searchParams;
 
   await connectToDatabase();
   
@@ -17,6 +17,13 @@ export default async function BooksPage({ searchParams }: { searchParams: Promis
   }
   if (author) {
     query.authorName = { $regex: new RegExp(`^${author}$`, "i") };
+  }
+  // সার্চ কোয়েরি থাকলে বইয়ের নাম অথবা লেখকের নামে খুঁজবে
+  if (q) {
+    query.$or = [
+      { title: { $regex: new RegExp(q, "i") } },
+      { authorName: { $regex: new RegExp(q, "i") } }
+    ];
   }
 
   const books = await Book.find(query).sort({ createdAt: -1 }).lean();
@@ -49,7 +56,8 @@ export default async function BooksPage({ searchParams }: { searchParams: Promis
 
   // পেজের হেডিং ডাইনামিক করা
   let heading = "সব বই";
-  if (category && author) heading = `${author} -এর ${category} বইসমূহ`;
+  if (q) heading = `"${q}" এর জন্য সার্চ রেজাল্ট`; // সার্চের হেডিং
+  else if (category && author) heading = `${author} -এর ${category} বইসমূহ`;
   else if (category) heading = `ক্যাটাগরি: ${category}`;
   else if (author) heading = `লেখক: ${author}`;
 

@@ -1,80 +1,129 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import connectToDatabase from "@/lib/db";
-import User from "@/models/User";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import AdjustCreditDialog from "@/components/admin/AdjustCreditDialog";
-import { Badge } from "@/components/ui/badge";
+"use client";
 
-export default async function AdminUsersPage() {
-  const session = await getServerSession(authOptions);
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Users, Loader2, Shield, User as UserIcon, Coins, Search } from "lucide-react";
 
-  if (!session || (session.user as any).role !== "admin") {
-    redirect("/");
-  }
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [updating, setUpdating] = useState<string | null>(null);
 
-  await connectToDatabase();
+  const fetchUsers = async () => {
+    const res = await fetch("/api/admin/users");
+    if (res.ok) {
+      const data = await res.json();
+      setUsers(data.users);
+    }
+    setLoading(false);
+  };
 
-  // সব ইউজারের তালিকা ডাটাবেস থেকে আনা হচ্ছে
-  const users = await User.find({}).sort({ createdAt: -1 }).lean();
+  useEffect(() => { fetchUsers(); }, []);
+
+  const handleUpdate = async (userId: string, payload: any) => {
+    setUpdating(userId);
+    const res = await fetch("/api/admin/users", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, ...payload }),
+    });
+    if (res.ok) {
+      fetchUsers();
+    }
+    setUpdating(null);
+  };
+
+  // সার্চ ফিল্টার
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(search.toLowerCase()) || 
+    user.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-indigo-600" /></div>;
 
   return (
-    <div className="container mx-auto px-4 py-10 max-w-7xl">
-      <h1 className="text-3xl font-extrabold text-gray-900 mb-8">ইউজার ম্যানেজমেন্ট (Admin)</h1>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
+        <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+          <Users className="text-indigo-600" /> ইউজার ও রোল ম্যানেজমেন্ট
+        </h1>
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Input 
+            placeholder="নাম বা ইমেইল দিয়ে খুঁজুন..." 
+            className="pl-10"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>সব ইউজার ({users.length} জন)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-gray-50">
-                <TableRow>
-                  <TableHead>নাম ও ইমেইল</TableHead>
-                  <TableHead>রোল (Role)</TableHead>
-                  <TableHead>ক্রেডিট ব্যালেন্স</TableHead>
-                  <TableHead>অ্যাকাউন্ট তৈরি</TableHead>
-                  <TableHead>অ্যাকশন</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user: any) => (
-                  <TableRow key={user._id.toString()}>
-                    <TableCell>
-                      <p className="font-semibold text-gray-900">{user.name}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                    </TableCell>
-                    <TableCell>
-                      {user.role === "admin" ? (
-                        <Badge className="bg-purple-600 hover:bg-purple-700">Admin</Badge>
-                      ) : (
-                        <Badge variant="secondary" className="capitalize">{user.role}</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-extrabold text-blue-700 text-lg">{user.credits || 0}</span>
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-500">
-                      {new Date(user.createdAt).toLocaleDateString("bn-BD")}
-                    </TableCell>
-                    <TableCell>
-                      {/* ক্রেডিট অ্যাডজাস্ট করার মডাল কম্পোনেন্ট */}
-                      <AdjustCreditDialog 
-                        userId={user._id.toString()} 
-                        userName={user.name} 
-                        currentCredits={user.credits || 0} 
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider">
+              <th className="px-6 py-4 font-bold">ইউজার</th>
+              <th className="px-6 py-4 font-bold">রোল (Role)</th>
+              <th className="px-6 py-4 font-bold">ক্রেডিট (Credits)</th>
+              <th className="px-6 py-4 font-bold text-center">অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredUsers.map((user) => (
+              <tr key={user._id} className="hover:bg-slate-50/50 transition-colors">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
+                      {user.avatar ? (
+                         <img src={user.avatar} className="w-full h-full rounded-full object-cover" alt="" />
+                      ) : user.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">{user.name}</p>
+                      <p className="text-xs text-slate-500">{user.email}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <select 
+                    value={user.role}
+                    onChange={(e) => handleUpdate(user._id, { role: e.target.value, credits: user.credits })}
+                    className="text-xs border-slate-200 rounded-md p-1.5 focus:ring-indigo-500 bg-white"
+                  >
+                    <option value="user">User</option>
+                    <option value="author">Author</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-amber-500" />
+                    <Input 
+                      type="number"
+                      defaultValue={user.credits}
+                      className="w-20 h-8 text-xs font-bold"
+                      onBlur={(e) => handleUpdate(user._id, { role: user.role, credits: Number(e.target.value) })}
+                    />
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  {updating === user._id ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-indigo-600 mx-auto" />
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-medium italic">অটো-সেভ অন</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filteredUsers.length === 0 && (
+          <div className="text-center py-10 text-slate-400">কোনো ইউজার পাওয়া যায়নি।</div>
+        )}
+      </div>
     </div>
   );
 }

@@ -41,12 +41,21 @@ export async function POST(req: Request) {
     user.credits -= book.read_credits;
     await user.save();
 
-    await UserBook.create({
-      userId: user._id,
-      bookId: book._id,
-      canRead: true,
-      status: "reading"
-    });
+   // ১. আগে চেক করবো ডাটাবেসে এই বইয়ের কোনো রেকর্ড (যেমন ডাউনলোডের জন্য) আছে কি না
+      let existingUserBook = await UserBook.findOne({ userId: user._id, bookId: book._id });
+
+      if (existingUserBook) {
+        // যদি আগে থেকেই রেকর্ড থাকে, তবে শুধু canRead টা true করে দেবো
+        existingUserBook.canRead = true;
+        await existingUserBook.save();
+      } else {
+        // যদি রেকর্ড না থাকে, তবে নতুন তৈরি করবো
+        await UserBook.create({
+          userId: user._id,
+          bookId: book._id,
+          canRead: true,
+        });
+      }
 
     if (book.read_credits > 0) {
       await CreditTxn.create({
@@ -57,6 +66,9 @@ export async function POST(req: Request) {
         description: `Unlocked digital reading for book: ${book.title}`
       });
     }
+
+
+   
 
     return NextResponse.json({ message: "বইটি সফলভাবে আনলক হয়েছে!", success: true }, { status: 200 });
   } catch (error) {

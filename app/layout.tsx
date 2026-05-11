@@ -17,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} min-h-screen bg-gray-50 flex flex-col`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-gray-50 flex flex-col`} suppressHydrationWarning>
         <AuthProvider>
           <Navbar /> {/* Navbar যুক্ত করা হলো */}
           <main className="flex-grow">

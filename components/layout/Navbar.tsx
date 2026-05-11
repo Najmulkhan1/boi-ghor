@@ -10,6 +10,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCartStore } from "@/store/useCartStore";
 import { useEffect, useState } from "react";
+import SearchBar from "./SearchBar";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -34,9 +35,11 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
+          
           <Link href="/books" className="hover:text-blue-600">সব বই</Link>
           <Link href="/categories" className="hover:text-blue-600">ক্যাটাগরি</Link>
           <Link href="/authors" className="hover:text-blue-600">লেখক</Link>
+          <SearchBar />
         </div>
 
         <div className="flex items-center gap-4">
@@ -72,8 +75,8 @@ export default function Navbar() {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" asChild className="hidden sm:flex"><Link href="/auth/login">লগিন</Link></Button>
-              <Button asChild><Link href="/auth/register">রেজিস্টার</Link></Button>
+              <Button variant="ghost" asChild className="hidden sm:flex"><Link href="/login">লগিন</Link></Button>
+              <Button asChild><Link href="/register">রেজিস্টার</Link></Button>
             </div>
           )}
         </div>
