@@ -78,90 +78,91 @@ export default async function BookDetailPage({
   };
 
   return (
-    <div className="container mx-auto px-4 py-10 max-w-6xl">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        {/* Left Column - Book Cover */}
-        <div className="md:col-span-4 lg:col-span-3">
-          <div className="rounded-lg overflow-hidden border shadow-sm bg-gray-50 aspect-[2/3] relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={serializedBook.coverImage}
-              alt={serializedBook.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-
-        {/* Middle Column - Book Details */}
-        <div className="md:col-span-8 lg:col-span-5 flex flex-col gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
-              {serializedBook.title}
-            </h1>
-            <p className="text-lg text-gray-600 font-medium">
-              লেখক:{" "}
-              <Link
-                href={`/authors/${serializedBook.authorProfileId}`}
-                className="text-blue-600 hover:underline ml-1"
-              >
-                {serializedBook.authorName}
-              </Link>
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center text-yellow-500">
-              <Star className="w-5 h-5 fill-current" />
-              <span className="ml-1 font-bold text-gray-700">
-                {serializedBook.averageRating || "0.0"}
-              </span>
-              <span className="ml-1 text-gray-500">
-                ({serializedBook.totalReviews || 0} reviews)
-              </span>
-            </div>
-            <Separator orientation="vertical" className="h-5" />
-            <span className="text-gray-500">
-              {serializedBook.language || "Bengali"}
-            </span>
-            <Separator orientation="vertical" className="h-5" />
-            <div className="flex gap-1">
-              {(serializedBook.categories || []).map((cat, index) => (
-                <Badge key={index} variant="secondary">
-                  {cat}
-                </Badge>
-              ))}
+    <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300">
+      <div className="container mx-auto px-4 py-10 max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          {/* Left Column - Book Cover */}
+          <div className="md:col-span-4 lg:col-span-3">
+            <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900 aspect-[2/3] relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={serializedBook.coverImage}
+                alt={serializedBook.title}
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
 
-          <Separator />
+          {/* Middle Column - Book Details */}
+          <div className="md:col-span-8 lg:col-span-5 flex flex-col gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 mb-2">
+                {serializedBook.title}
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">
+                লেখক:{" "}
+                <Link
+                  href={`/authors/${serializedBook.authorProfileId}`}
+                  className="text-blue-600 dark:text-blue-400 hover:underline ml-1"
+                >
+                  {serializedBook.authorName}
+                </Link>
+              </p>
+            </div>
 
-          <div>
-            <h3 className="font-bold text-lg mb-2">বইয়ের সারাংশ</h3>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-              {serializedBook.description}
-            </p>
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center text-yellow-500">
+                <Star className="w-5 h-5 fill-current" />
+                <span className="ml-1 font-bold text-gray-700 dark:text-gray-300">
+                  {serializedBook.averageRating || "0.0"}
+                </span>
+                <span className="ml-1 text-gray-500 dark:text-gray-400">
+                  ({serializedBook.totalReviews || 0} reviews)
+                </span>
+              </div>
+              <Separator orientation="vertical" className="h-5 bg-gray-200 dark:bg-gray-800" />
+              <span className="text-gray-500 dark:text-gray-400">
+                {serializedBook.language || "Bengali"}
+              </span>
+              <Separator orientation="vertical" className="h-5 bg-gray-200 dark:bg-gray-800" />
+              <div className="flex gap-1">
+                {(serializedBook.categories || []).map((cat, index) => (
+                  <Badge key={index} variant="secondary" className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                    {cat}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <Separator className="bg-gray-200 dark:bg-gray-800" />
+
+            <div>
+              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-gray-100">বইয়ের সারাংশ</h3>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                {serializedBook.description}
+              </p>
+            </div>
           </div>
-        </div>
 
         {/* Right Column - Actions & Pricing */}
         <div className="md:col-span-12 lg:col-span-4 space-y-6">
           {/* Digital Copy Card */}
-          <Card className="border-blue-100 shadow-sm">
+          <Card className="border-blue-100 dark:border-blue-900/50 bg-white dark:bg-gray-900 shadow-sm">
             <CardContent className="p-6 space-y-4">
               <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-blue-600">📱 Digital Version</Badge>
+                <Badge className="bg-blue-600 dark:bg-blue-500">📱 Digital Version</Badge>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">অনলাইনে পড়ুন:</span>
-                  <span className="font-bold text-blue-700">
+                  <span className="text-gray-600 dark:text-gray-400">অনলাইনে পড়ুন:</span>
+                  <span className="font-bold text-blue-700 dark:text-blue-400">
                     {serializedBook.read_credits} Credits
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">ডাউনলোড করুন:</span>
-                  <span className="font-bold text-blue-400">
+                  <span className="text-gray-600 dark:text-gray-400">ডাউনলোড করুন:</span>
+                  <span className="font-bold text-blue-400 dark:text-blue-300">
                     {serializedBook.download_credits} Credits
                   </span>
                 </div>
@@ -188,22 +189,22 @@ export default async function BookDetailPage({
 
           {/* Hard Copy Card (Only if available) */}
           {serializedBook.hardCopyAvailable && (
-            <Card className="border-green-100 shadow-sm">
+            <Card className="border-green-100 dark:border-green-900/50 bg-white dark:bg-gray-900 shadow-sm">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-green-600">📦 Printed Hard Copy</Badge>
+                  <Badge className="bg-green-600 dark:bg-green-500">📦 Printed Hard Copy</Badge>
                 </div>
 
                 <div className="flex justify-between items-end">
-                  <span className="text-3xl font-extrabold text-gray-900">
+                  <span className="text-3xl font-extrabold text-gray-900 dark:text-gray-50">
                     ৳{serializedBook.hardCopyPrice}
                   </span>
                   {serializedBook.hardCopyStock > 0 ? (
-                    <span className="text-sm font-medium text-green-600">
+                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
                       In Stock ({serializedBook.hardCopyStock})
                     </span>
                   ) : (
-                    <span className="text-sm font-medium text-red-600">
+                    <span className="text-sm font-medium text-red-600 dark:text-red-400">
                       Out of Stock
                     </span>
                   )}
@@ -213,20 +214,20 @@ export default async function BookDetailPage({
                   <AddToCartButton book={serializedBook} />
                   <Button
                     variant="secondary"
-                    className="w-full"
+                    className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
                     disabled={serializedBook.hardCopyStock <= 0}
                   >
                     এখনই কিনুন
                   </Button>
                 </div>
 
-                <div className="mt-4 space-y-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+                <div className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-md border border-gray-100 dark:border-gray-800">
                   <div className="flex items-center gap-2">
-                    <Truck className="w-4 h-4 text-gray-400" />
+                    <Truck className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                     <span>সারা বাংলাদেশে হোম ডেলিভারি</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-gray-400" />
+                    <ShieldCheck className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                     <span>অরিজিনাল প্রিন্টেড কপি গ্যারান্টি</span>
                   </div>
                 </div>
@@ -238,6 +239,7 @@ export default async function BookDetailPage({
       {/* Book Reviews Section */}
       <div className="mt-16 max-w-4xl mx-auto">
         <BookReviews bookId={serializedBook._id} />
+      </div>
       </div>
     </div>
   );

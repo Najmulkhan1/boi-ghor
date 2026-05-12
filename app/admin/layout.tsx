@@ -1,9 +1,10 @@
-import AdminSidebar from "@/components/layout/AdminSidebar";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import connectToDatabase from "@/lib/db";
 import User from "@/models/User";
+import AdminSidebar from "@/components/layout/AdminSidebar";
+import MobileAdminNav from "@/components/layout/MobileAdminNav";
 
 export default async function AdminLayout({
   children,
@@ -19,22 +20,29 @@ export default async function AdminLayout({
   await connectToDatabase();
   const user = await User.findById(session.user.id).select("role").lean();
 
-  // যদি ইউজারের রোল admin না হয়, তবে তাকে সাধারণ ড্যাশবোর্ডে পাঠিয়ে দেবে
   if (user?.role !== "admin") {
     redirect("/dashboard");
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      <div className="w-full md:w-64 flex-shrink-0 z-20 md:sticky md:top-0 md:h-screen">
-        <AdminSidebar />
-      </div>
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-gray-950 flex flex-col md:flex-row">
+      {/* মোবাইলের জন্য টপ নেভিগেশন (Logo + Menu Button) */}
+      <MobileAdminNav />
 
-      <div className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-7xl mx-auto">
-          {children}
+      {/* ডেস্কটপ সাইডবার (Sticky & Hidden on Mobile) */}
+      <aside className="hidden md:flex w-72 flex-col fixed inset-y-0 z-50 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+        <AdminSidebar />
+      </aside>
+
+      {/* মেইন কন্টেন্ট এরিয়া */}
+      <main className="flex-1 md:pl-72 min-h-screen transition-all duration-300">
+        <div className="p-4 md:p-10 max-w-7xl mx-auto">
+          {/* Page Wrapper for clean spacing */}
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {children}
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
-}
+} 

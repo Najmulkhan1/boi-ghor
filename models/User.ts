@@ -7,8 +7,11 @@ const AddressSchema = new Schema({
   phone: { type: String, required: true },
   addressLine1: { type: String, required: true },
   addressLine2: { type: String, required: false },
-  city: { type: String, required: true },
-  postalCode: { type: String, required: true },
+  division: { type: String, required: false }, // বিভাগ
+  district: { type: String, required: false }, // জেলা
+  upazila: { type: String, required: false },  // উপজেলা
+  city: { type: String, required: false },     // backward compat
+  postalCode: { type: String, required: false },
   isDefault: { type: Boolean, default: false },
 });
 

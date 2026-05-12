@@ -4,7 +4,37 @@ import { authOptions } from "@/lib/auth";
 import connectToDatabase from "@/lib/db";
 import Book from "@/models/Book";
 import User from "@/models/User";
+import bcrypt from "bcryptjs"; // নতুন অথর তৈরির সময় পাসওয়ার্ড হ্যাশ করার জন্য
 
+// 💡 স্মার্ট অথর জেনারেটর ফাংশন
+async function getOrCreateAuthorId(authorName: string) {
+  if (!authorName) return null;
+
+  // ১. চেক করা হচ্ছে এই নামে আগে থেকেই কোনো Author আছে কি না
+  let author = await User.findOne({ 
+    name: { $regex: new RegExp(`^${authorName}$`, "i") }, // Case-insensitive search
+    role: "author" 
+  });
+
+  // যদি থাকে, তবে তার ID রিটার্ন করবে
+  if (author) return author._id;
+
+  // ২. যদি না থাকে, তবে অটোমেটিক একটি নতুন Author Profile তৈরি করবে
+  const slugName = authorName.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const autoEmail = `${slugName}${Math.floor(Math.random() * 1000)}@author.boighor.com`;
+  const defaultPassword = await bcrypt.hash("author1234", 10); // ডিফল্ট পাসওয়ার্ড
+
+  const newAuthor = await User.create({
+    name: authorName,
+    email: autoEmail,
+    password: defaultPassword,
+    role: "author", // রোল author সেট করা হলো
+  });
+
+  return newAuthor._id;
+}
+
+// ================= PUT METHOD =================
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,7 +48,7 @@ export async function PUT(req: Request) {
     const admin = await User.findById(session.user.id).select("role").lean();
     if (admin?.role !== "admin") return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 
-    // ফিল্ডের নাম hardCopyStock দিয়ে চেক করা হচ্ছে
+    // ফিল্ডের নাম hardCopyStock দিয়ে চেক করা হচ্ছে
     if (updateData.hardCopyStock !== undefined) {
       updateData.hardCopyStock = Number(updateData.hardCopyStock);
     }
@@ -38,7 +68,7 @@ export async function PUT(req: Request) {
   }
 }
 
-// GET method আগের মতোই থাকবে
+// ================= GET METHOD =================
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -51,8 +81,7 @@ export async function GET() {
   }
 }
 
-
-// GET এবং PUT মেথডের নিচে এই অংশটি যোগ করুন
+// ================= POST METHOD =================
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -62,28 +91,60 @@ export async function POST(req: Request) {
     if (admin?.role !== "admin") return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 
     const body = await req.json();
-    const { books } = body;
-
-    if (!books || !Array.isArray(books) || books.length === 0) {
-      return NextResponse.json({ message: "কোনো ডেটা পাওয়া যায়নি!" }, { status: 400 });
-    }
-
     await connectToDatabase();
 
-    // সব বইয়ের সাথে অ্যাডমিনের ID যুক্ত করে দেওয়া হচ্ছে (যেহেতু authorId রিকোয়ার্ড থাকে)
-    const booksWithAuthor = books.map((book: any) => ({
-      ...book,
-      authorId: session.user.id, 
-      coverImage: book.coverImage || "https://via.placeholder.com/150", // ডিফল্ট ইমেজ
-      hardCopyAvailable: book.hardCopyStock > 0
-    }));
+    // ----------------------------------------------------
+    // লজিক ১: BULK ADD (যদি CSV আপলোড করে অনেক বই দেওয়া হয়)
+    // ----------------------------------------------------
+    if (body.books && Array.isArray(body.books)) {
+      if (body.books.length === 0) {
+        return NextResponse.json({ message: "কোনো ডেটা পাওয়া যায়নি!" }, { status: 400 });
+      }
 
-    // একসাথে সব ডেটা ইনসার্ট করা (Bulk Insert)
-    const insertedBooks = await Book.insertMany(booksWithAuthor);
+      const booksWithAuthor = await Promise.all(body.books.map(async (book: any) => {
+        // নতুন ফাংশনটির মাধ্যমে Author ID নিয়ে আসা
+        const realAuthorId = await getOrCreateAuthorId(book.authorName);
 
-    return NextResponse.json({ message: `${insertedBooks.length} টি বই সফলভাবে যুক্ত হয়েছে!`, insertedBooks }, { status: 201 });
+        // অটোমেটিক Slug এবং Description জেনারেট করা
+        const baseSlug = book.title ? book.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : 'book';
+        const uniqueSlug = book.slug || `${baseSlug}-${Math.floor(Math.random() * 10000)}`;
+        const defaultDescription = book.description || `${book.title} - ${book.authorName} এর লেখা একটি চমৎকার বই।`;
+
+        return {
+          ...book,
+          authorId: realAuthorId || session.user.id, // যদি অথরের নাম না থাকে, তবে অ্যাডমিন আইডি
+          coverImage: book.coverImage || "https://via.placeholder.com/150", // ডিফল্ট ইমেজ
+          hardCopyAvailable: book.hardCopyStock > 0,
+          slug: uniqueSlug,
+          description: defaultDescription
+        };
+      }));
+
+      // একসাথে সব ডেটা ইনসার্ট করা (Bulk Insert)
+      const insertedBooks = await Book.insertMany(booksWithAuthor);
+      return NextResponse.json({ message: `${insertedBooks.length} টি বই সফলভাবে যুক্ত হয়েছে!`, insertedBooks }, { status: 201 });
+    }
+
+    // ----------------------------------------------------
+    // লজিক ২: SINGLE ADD (যদি একটি মাত্র বই ম্যানুয়ালি অ্যাড করা হয়)
+    // ----------------------------------------------------
+    else {
+      const realAuthorId = await getOrCreateAuthorId(body.authorName);
+
+      const baseSlug = body.title ? body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : 'book';
+      const uniqueSlug = body.slug || `${baseSlug}-${Math.floor(Math.random() * 10000)}`;
+
+      const newBook = await Book.create({
+        ...body,
+        authorId: realAuthorId || session.user.id,
+        slug: uniqueSlug,
+      });
+
+      return NextResponse.json({ message: "বই সফলভাবে যোগ করা হয়েছে!", book: newBook }, { status: 201 });
+    }
+
   } catch (error) {
-    console.error("Bulk Insert Error:", error);
-    return NextResponse.json({ message: "Bulk Add Failed" }, { status: 500 });
+    console.error("Book Add Error:", error);
+    return NextResponse.json({ message: "Failed to add book" }, { status: 500 });
   }
 }

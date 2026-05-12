@@ -1,6 +1,6 @@
 export interface IBook {
   _id: string;
-  authorId: string; // <-- এই লাইনটি নতুন যোগ করুন
+  authorId?: string; // <-- এই লাইনটি নতুন যোগ করুন
   title: string;
   slug: string;
   authorName: string;

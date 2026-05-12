@@ -20,8 +20,11 @@ const OrderSchema = new Schema(
       email: { type: String, required: true },
       addressLine1: { type: String, required: true },
       addressLine2: { type: String, required: false },
-      city: { type: String, required: true },
-      postalCode: { type: String, required: true },
+      division: { type: String, required: false },
+      district: { type: String, required: false },
+      upazila: { type: String, required: false },
+      city: { type: String, required: false },
+      postalCode: { type: String, required: false },
       deliveryNote: { type: String, required: false },
     },
     payment: {
