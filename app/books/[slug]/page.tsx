@@ -78,7 +78,7 @@ export default async function BookDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-gray-950 mt-10 transition-colors duration-300">
       <div className="container mx-auto px-4 py-10 max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           {/* Left Column - Book Cover */}
@@ -126,7 +126,7 @@ export default async function BookDetailPage({
               </span>
               <Separator orientation="vertical" className="h-5 bg-gray-200 dark:bg-gray-800" />
               <div className="flex gap-1">
-                {(serializedBook.categories || []).map((cat, index) => (
+                {(serializedBook.categories || []).map((cat:any, index:number) => (
                   <Badge key={index} variant="secondary" className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
                     {cat}
                   </Badge>

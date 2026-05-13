@@ -82,7 +82,7 @@ export default async function BooksPage({
   else if (author) heading = `${author}-এর বই`;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-gray-950 transition-colors duration-300">
+    <div className="min-h-screen bg-[#F8FAFC] mt-10 dark:bg-gray-950 transition-colors duration-300">
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col lg:flex-row gap-8">
           

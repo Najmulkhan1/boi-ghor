@@ -6,29 +6,34 @@ import Book from "@/models/Book";
 import User from "@/models/User";
 import bcrypt from "bcryptjs"; // নতুন অথর তৈরির সময় পাসওয়ার্ড হ্যাশ করার জন্য
 
-// 💡 স্মার্ট অথর জেনারেটর ফাংশন
+// 💡 স্মার্ট এবং ডুপ্লিকেট-প্রুফ অথর জেনারেটর ফাংশন
 async function getOrCreateAuthorId(authorName: string) {
   if (!authorName) return null;
 
-  // ১. চেক করা হচ্ছে এই নামে আগে থেকেই কোনো Author আছে কি না
+  // নামের আগে বা পিছে কোনো স্পেস থাকলে তা কেটে ফেলা হলো
+  const cleanName = authorName.trim(); 
+
+  // ১. চেক করা হচ্ছে এই নামে আগে থেকেই কোনো Author আছে কি না (Case-insensitive)
   let author = await User.findOne({ 
-    name: { $regex: new RegExp(`^${authorName}$`, "i") }, // Case-insensitive search
+    name: { $regex: new RegExp(`^${cleanName}$`, "i") }, 
     role: "author" 
   });
 
-  // যদি থাকে, তবে তার ID রিটার্ন করবে
+  // যদি ডাটাবেসে এই নামের লেখক পাওয়া যায়, তবে নতুন করে একাউন্ট তৈরি হবে না!
+  // আগের একাউন্টের ID টাই রিটার্ন করে দেবে।
   if (author) return author._id;
 
-  // ২. যদি না থাকে, তবে অটোমেটিক একটি নতুন Author Profile তৈরি করবে
-  const slugName = authorName.toLowerCase().replace(/[^a-z0-9]+/g, '');
-  const autoEmail = `${slugName}${Math.floor(Math.random() * 1000)}@author.boighor.com`;
+  // ২. যদি ডাটাবেসে না থাকে, তবেই শুধু নতুন Author Profile তৈরি করবে
+  const slugName = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2, 5); // ১০০% ইউনিক ইমেইল নিশ্চিত করতে
+  const autoEmail = `${slugName}_${uniqueId}@author.boighor.com`;
   const defaultPassword = await bcrypt.hash("author1234", 10); // ডিফল্ট পাসওয়ার্ড
 
   const newAuthor = await User.create({
-    name: authorName,
+    name: cleanName,
     email: autoEmail,
     password: defaultPassword,
-    role: "author", // রোল author সেট করা হলো
+    role: "author", 
   });
 
   return newAuthor._id;
@@ -82,6 +87,7 @@ export async function GET() {
 }
 
 // ================= POST METHOD =================
+// ================= POST METHOD =================
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -101,8 +107,11 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "কোনো ডেটা পাওয়া যায়নি!" }, { status: 400 });
       }
 
-      const booksWithAuthor = await Promise.all(body.books.map(async (book: any) => {
-        // নতুন ফাংশনটির মাধ্যমে Author ID নিয়ে আসা
+      const booksWithAuthor = [];
+
+      // 💡 Promise.all এর বদলে for...of ব্যবহার করা হলো যাতে একসাথে অনেকগুলো রিকোয়েস্ট ক্র্যাশ না করে
+      for (const book of body.books) {
+        // এক এক করে Author ID চেক করবে ও নিয়ে আসবে
         const realAuthorId = await getOrCreateAuthorId(book.authorName);
 
         // অটোমেটিক Slug এবং Description জেনারেট করা
@@ -110,17 +119,17 @@ export async function POST(req: Request) {
         const uniqueSlug = book.slug || `${baseSlug}-${Math.floor(Math.random() * 10000)}`;
         const defaultDescription = book.description || `${book.title} - ${book.authorName} এর লেখা একটি চমৎকার বই।`;
 
-        return {
+        booksWithAuthor.push({
           ...book,
-          authorId: realAuthorId || session.user.id, // যদি অথরের নাম না থাকে, তবে অ্যাডমিন আইডি
+          authorId: realAuthorId || session.user.id, // যদি অথরের নাম না থাকে, তবে অ্যাডমিন আইডি বসবে
           coverImage: book.coverImage || "https://via.placeholder.com/150", // ডিফল্ট ইমেজ
           hardCopyAvailable: book.hardCopyStock > 0,
           slug: uniqueSlug,
           description: defaultDescription
-        };
-      }));
+        });
+      }
 
-      // একসাথে সব ডেটা ইনসার্ট করা (Bulk Insert)
+      // সব ডেটা প্রসেস হওয়ার পর একসাথে ইনসার্ট করা
       const insertedBooks = await Book.insertMany(booksWithAuthor);
       return NextResponse.json({ message: `${insertedBooks.length} টি বই সফলভাবে যুক্ত হয়েছে!`, insertedBooks }, { status: 201 });
     }

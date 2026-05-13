@@ -3,6 +3,7 @@
 import { Worker, Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
+import { ScrollMode } from '@react-pdf-viewer/core';
 
 // CSS Styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -31,7 +32,7 @@ export default function EnhancedPDFViewer({ fileUrl }: Props) {
           defaultScale={SpecialZoomLevel.PageFit}
           theme="dark"
           // স্ক্রল মোড ভার্টিকাল থেকে সিঙ্গেল পেজ করলে মোবাইলে সুবিধা হয়
-          scrollMode="vertical" 
+          scrollMode={ScrollMode.Vertical} 
         />
       </Worker>
 

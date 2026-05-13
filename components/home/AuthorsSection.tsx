@@ -1,5 +1,9 @@
 "use client";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const marqueeBooks = [
   "প্যারাডক্সিক্যাল সাজিদ", "Atomic Habits", "বেলা ফুরাবার আগে", "The Alchemist",
@@ -15,13 +19,104 @@ const authorHighlights = [
 ];
 
 export default function MarqueeAndAuthors() {
+  const authorSectionRef = useRef<HTMLElement>(null);
+  const authorHeaderRef = useRef<HTMLDivElement>(null);
+  const authorGridRef = useRef<HTMLDivElement>(null);
+  const marqueeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // ── Continuous marquee via GSAP ──
+      if (marqueeRef.current) {
+        const items = marqueeRef.current.children;
+        const totalWidth = marqueeRef.current.scrollWidth / 2;
+        gsap.to(marqueeRef.current, {
+          x: -totalWidth,
+          duration: 28,
+          ease: "none",
+          repeat: -1,
+        });
+      }
+
+      // ── Author header ──
+      gsap.fromTo(
+        authorHeaderRef.current,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power3.out",
+          scrollTrigger: { trigger: authorHeaderRef.current, start: "top 85%" },
+        }
+      );
+
+      // ── Author cards — spring pop ──
+      const cards = authorGridRef.current?.querySelectorAll(".author-card");
+      if (cards) {
+        gsap.fromTo(
+          cards,
+          { opacity: 0, scale: 0.5, y: 40 },
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: 0.7,
+            stagger: 0.12,
+            ease: "back.out(2)",
+            scrollTrigger: {
+              trigger: authorGridRef.current,
+              start: "top 80%",
+            },
+          }
+        );
+      }
+
+      // ── Avatar ring spin on enter ──
+      if (cards) {
+        Array.from(cards).forEach((card, idx) => {
+          const avatar = card.querySelector(".author-avatar");
+          ScrollTrigger.create({
+            trigger: card as Element,
+            start: "top 80%",
+            onEnter: () => {
+              gsap.fromTo(
+                avatar,
+                { rotate: -20, scale: 0.6, opacity: 0 },
+                { rotate: 0, scale: 1, opacity: 1, duration: 0.6, delay: idx * 0.1, ease: "back.out(2)" }
+              );
+            },
+          });
+        });
+      }
+
+      // ── Card hover tilt ──
+      const cardEls = Array.from(
+        authorGridRef.current?.querySelectorAll(".author-card") ?? []
+      ) as HTMLElement[];
+      cardEls.forEach((card) => {
+        card.addEventListener("mouseenter", () => {
+          gsap.to(card, { y: -8, scale: 1.03, duration: 0.35, ease: "power2.out" });
+        });
+        card.addEventListener("mouseleave", () => {
+          gsap.to(card, { y: 0, scale: 1, duration: 0.4, ease: "power2.inOut" });
+        });
+      });
+    });
+
+    return () => ctx.revert();
+  }, []);
+
   return (
     <>
       {/* MARQUEE TICKER */}
       <section className="py-6 bg-indigo-600 overflow-hidden">
-        <div className="flex whitespace-nowrap animate-marquee gap-0">
+        <div ref={marqueeRef} className="flex whitespace-nowrap gap-0" style={{ willChange: "transform" }}>
           {[...marqueeBooks, ...marqueeBooks].map((b, i) => (
-            <span key={i} className="inline-flex items-center gap-4 px-6 text-white font-baloo font-bold text-lg">
+            <span
+              key={i}
+              className="inline-flex items-center gap-4 px-6 text-white font-baloo font-bold text-lg"
+            >
               {b} <span className="text-indigo-300 text-xl">✦</span>
             </span>
           ))}
@@ -29,40 +124,45 @@ export default function MarqueeAndAuthors() {
       </section>
 
       {/* AUTHORS SECTION */}
-      <section className="py-28 bg-[#FAF8F3] dark:bg-[#0D0D1A]">
+      <section ref={authorSectionRef} className="py-28 bg-[#FAF8F3] dark:bg-[#0D0D1A]">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16 space-y-3">
+          <div ref={authorHeaderRef} className="text-center mb-16 space-y-3">
             <p className="font-baloo text-indigo-500 italic text-lg">আমাদের সংগ্রহ থেকে</p>
-            <h2 className="text-5xl font-black font-noto text-slate-900 dark:text-white">জনপ্রিয় লেখকরা</h2>
+            <h2 className="text-5xl font-black font-noto text-slate-900 dark:text-white">
+              জনপ্রিয় লেখকরা
+            </h2>
             <p className="text-slate-500 font-tiro max-w-md mx-auto">
               বাংলা সাহিত্যের কিংবদন্তি থেকে আধুনিক লেখক — সবার বই এক জায়গায়
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div
+            ref={authorGridRef}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6"
+          >
             {authorHighlights.map((author, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -6 }}
-                className="group text-center bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-500 cursor-pointer"
+                className="author-card group text-center bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-shadow duration-500 cursor-pointer"
+                style={{ willChange: "transform" }}
               >
                 <div className="relative w-24 h-24 mx-auto mb-5">
                   <img
                     src={author.avatar}
                     alt={author.name}
-                    className="w-full h-full rounded-full object-cover border-4 border-indigo-100 dark:border-indigo-900 group-hover:border-indigo-400 transition-colors"
+                    className="author-avatar w-full h-full rounded-full object-cover border-4 border-indigo-100 dark:border-indigo-900 group-hover:border-indigo-400 transition-colors"
                   />
                   <div className="absolute inset-0 rounded-full bg-indigo-500/0 group-hover:bg-indigo-500/10 transition-colors" />
                 </div>
-                <h4 className="font-black font-noto text-slate-900 dark:text-white text-lg mb-1">{author.name}</h4>
-                <p className="text-indigo-500 dark:text-indigo-400 text-sm font-bold font-hind mb-1">{author.books}</p>
+                <h4 className="font-black font-noto text-slate-900 dark:text-white text-lg mb-1">
+                  {author.name}
+                </h4>
+                <p className="text-indigo-500 dark:text-indigo-400 text-sm font-bold font-hind mb-1">
+                  {author.books}
+                </p>
                 <span className="inline-block px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold font-hind">
                   {author.genre}
                 </span>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
