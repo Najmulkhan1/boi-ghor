@@ -80,7 +80,7 @@ export default function BookCard({ book }: { book: IBook }) {
 
         {/* টাইটেল এবং লেখক */}
         <div className="mb-2">
-          <Link href={`/books/${book.slug}`}>
+          <Link href={`/books/${book.slug}`} prefetch={false}>
             <h3
               className="font-bold text-xs sm:text-sm text-gray-900 dark:text-gray-100 leading-tight group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors line-clamp-2"
               title={book.title}

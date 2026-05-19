@@ -121,6 +121,7 @@ export default function EditBookPage() {
 
       if (res.ok) {
         alert("বই সফলভাবে আপডেট করা হয়েছে!");
+        router.refresh();
         router.push("/author/my-books"); 
       } else {
         alert("আপডেট করতে কোনো সমস্যা হয়েছে!");

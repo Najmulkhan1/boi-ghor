@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectToDatabase from "@/lib/db";
 import Book from "@/models/Book";
+import { revalidatePath } from "next/cache";
 
 // GET: এডিট করার জন্য নির্দিষ্ট একটি বইয়ের ডেটা আনা
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -41,6 +42,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     // ডেটা আপডেট করা
     const updatedBook = await Book.findByIdAndUpdate(id, body, { new: true });
+
+    if (updatedBook) {
+      revalidatePath(`/books/${updatedBook.slug}`, 'page');
+      revalidatePath(`/books/[slug]`, 'page');
+      revalidatePath(`/books`, 'page');
+      revalidatePath(`/`, 'layout');
+    }
 
     return NextResponse.json({ message: "বই সফলভাবে আপডেট করা হয়েছে!", book: updatedBook }, { status: 200 });
   } catch (error) {

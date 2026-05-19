@@ -7,7 +7,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/useCartStore";
 import { 
   ShoppingCart, BookOpen, LayoutDashboard, 
-  Library, Package, LogOut 
+  Library, Package, LogOut, Home, User 
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,8 @@ export default function Navbar() {
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <header 
+    <>
+      <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 py-2 ${
         isScrolled ? "mt-2" : "mt-0"
       }`}
@@ -132,10 +133,33 @@ export default function Navbar() {
                 </Button>
               </div>
             )}
+
           </div>
         </div>
       </nav>
     </header>
+
+    {/* Bottom Navigation for Mobile */}
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-800/50 pb-2 pt-1 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
+      <div className="flex items-center justify-around h-14 px-2">
+        <BottomNavItem href="/" icon={<Home className="h-5 w-5" />} label="হোম" isActive={pathname === "/"} />
+        <BottomNavItem href="/categories" icon={<Library className="h-5 w-5" />} label="ক্যাটাগরি" isActive={pathname === "/categories"} />
+        
+        {/* Floating Action Button for Books */}
+        <div className="relative -top-5 flex justify-center w-full">
+          <Link 
+            href="/books" 
+            className="flex items-center justify-center h-14 w-14 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-full shadow-lg shadow-blue-500/40 text-white hover:scale-105 active:scale-95 transition-all"
+          >
+            <BookOpen className="h-6 w-6" />
+          </Link>
+        </div>
+
+        <BottomNavItem href="/cart" icon={<ShoppingCart className="h-5 w-5" />} label="কার্ট" badge={totalItems} isActive={pathname === "/cart"} />
+        <BottomNavItem href={session ? "/dashboard" : "/login"} icon={<User className="h-5 w-5" />} label={session ? "প্রোফাইল" : "লগিন"} isActive={pathname === "/dashboard" || pathname === "/login"} />
+      </div>
+    </nav>
+    </>
   );
 }
 
@@ -161,5 +185,26 @@ function DropdownItem({ href, icon, label }: { href: string; icon: React.ReactNo
         {label}
       </Link>
     </DropdownMenuItem>
+  );
+}
+
+// Bottom Nav Item Component
+function BottomNavItem({ href, icon, label, isActive, badge }: { href: string; icon: React.ReactNode; label: string; isActive?: boolean; badge?: number }) {
+  return (
+    <Link href={href} className="relative flex flex-col items-center justify-center w-full h-full gap-1 group">
+      <div className="relative">
+        <div className={`transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
+          {icon}
+        </div>
+        {badge !== undefined && badge > 0 && (
+          <span className="absolute -top-1.5 -right-2 h-4 w-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm ring-2 ring-white dark:ring-gray-950">
+            {badge}
+          </span>
+        )}
+      </div>
+      <span className={`text-[10px] font-medium transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
+        {label}
+      </span>
+    </Link>
   );
 }

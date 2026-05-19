@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CldUploadWidget } from "next-cloudinary";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -39,6 +40,7 @@ export default function AdminBooksPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
+  const router = useRouter();
 
   // মোডাল হ্যান্ডলিং এর জন্য স্টেট (Edit)
   const [selectedBook, setSelectedBook] = useState<any>(null);
@@ -113,6 +115,7 @@ export default function AdminBooksPage() {
         alert("নতুন বই সফলভাবে যুক্ত হয়েছে! 🎉");
         setIsAddModalOpen(false);
         fetchBooks();
+        router.refresh();
         // ফর্ম রিসেট করা হলো
         setNewBook({
           title: "", slug: "", description: "", authorName: "", language: "Bengali", categories: "",
@@ -141,7 +144,10 @@ export default function AdminBooksPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookId, ...payload }),
       });
-      if (res.ok) fetchBooks();
+      if (res.ok) {
+        fetchBooks();
+        router.refresh();
+      }
     } catch (error) {
       alert("আপডেট ফেইল হয়েছে!");
     } finally {
@@ -164,6 +170,7 @@ export default function AdminBooksPage() {
         alert("সফলভাবে আপডেট হয়েছে!");
         fetchBooks();
         setIsModalOpen(false);
+        router.refresh();
       } else {
         alert("আপডেট করতে সমস্যা হয়েছে!");
       }
@@ -269,11 +276,11 @@ export default function AdminBooksPage() {
     reader.readAsText(file);
   };
 
-  const downloadDemoCSV = () => {
+ const downloadDemoCSV = () => {
     const csvContent =
-      "title,authorName,category,hardCopyPrice,hardCopyStock,read_credits,download_credits,description,slug\n" +
-      "Paradoxical Sajid,Arif Azad,Islamic,300,50,10,20,Best islamic book,paradoxical-sajid\n" +
-      "Think and Grow Rich,Napoleon Hill,Self-Help,400,30,15,25,Self help motivation book,think-and-grow-rich";
+      "title,authorName,category,hardCopyPrice,hardCopyStock,read_credits,download_credits,description,slug,coverImage\n" +
+      "Paradoxical Sajid,Arif Azad,Islamic,300,50,10,20,Best islamic book,paradoxical-sajid,https://via.placeholder.com/150\n" +
+      "Think and Grow Rich,Napoleon Hill,Self-Help,400,30,15,25,Self help motivation book,think-and-grow-rich,https://via.placeholder.com/150";
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -293,41 +300,81 @@ export default function AdminBooksPage() {
 
 
 
-  // ==========================================
-  // 💡 Export All Books to CSV Function
+ // ==========================================
+  // 💡 Export All Books to CSV Function (Updated with all fields)
   // ==========================================
   const exportBooksToCSV = () => {
     if (!books || books.length === 0) {
-      return alert("ডাউনলোড করার মতো কোনো বইয়ের ডেটা নেই!");
+      return alert("ডাউনলোড করার মতো কোনো বইয়ের ডেটা নেই!");
     }
 
+    // আপনার দেওয়া লিস্ট অনুযায়ী সব ফিল্ডের হেডার
     const headers = [
-      "title", "authorName", "category", "hardCopyPrice", 
-      "hardCopyStock", "read_credits", "download_credits", "description", "slug"
+      "title", 
+      "authorName", 
+      "category", 
+      "hardCopyPrice", 
+      "hardCopyStock", 
+      "read_credits", 
+      "download_credits", 
+      "description", 
+      "slug", 
+      "coverImage",
+      "categories", 
+      "language", 
+      "read_credits", 
+      "download_credits", 
+      "hardCopyAvailable", 
+      "hardCopyPrice", 
+      "totalReviews", 
+      "averageRating", 
+      "totalReads", 
+      "totalSold", 
+      "isFeatured"
     ];
 
     const csvRows = books.map((book) => {
       return headers.map((header) => {
-        let val = book[header] !== undefined && book[header] !== null ? book[header] : "";
+        let val = book[header];
+
+        // ক্যাটাগরি যদি Array হয়, তবে কমা দিয়ে স্ট্রিং এ কনভার্ট করা
+        if (header === "categories" && Array.isArray(val)) {
+          val = val.join(" | "); 
+        } 
         
+        // যদি ডাটা না থাকে বা undefined হয়, তবে ফাঁকা স্ট্রিং দেখানো
+        if (val === undefined || val === null) {
+          val = "";
+        }
+
         // কমা (,) বা লাইন ব্রেক থাকলে তা হ্যান্ডেল করার জন্য স্ট্রিংকে ডাবল কোটেশন ("") এর ভেতরে রাখা হচ্ছে
         if (typeof val === "string") {
           val = val.replace(/"/g, '""'); // এস্কেপ করা
           val = `"${val}"`;
         }
+        
+        // বুলিয়ান (true/false) ভ্যালুকে স্ট্রিং এ কনভার্ট করা
+        if (typeof val === "boolean") {
+          val = val ? "true" : "false";
+        }
+
         return val;
       }).join(",");
     });
 
+    // CSV এর কন্টেন্ট তৈরি
     const csvContent = [headers.join(","), ...csvRows].join("\n");
+    
+    // ডাউনলোড প্রসেস
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     
-    // ডাউনলোড ফাইলের নাম ডায়নামিক করা হয়েছে
+    // ডাউনলোড ফাইলের নাম ডায়নামিক করা হয়েছে (যেমন: boighor_all_books_2026-05-16.csv)
     const date = new Date().toISOString().split('T')[0];
-    link.setAttribute("download", `boighor_books_${date}.csv`);
+    link.setAttribute("download", `boighor_all_books_${date}.csv`);
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -710,7 +757,8 @@ export default function AdminBooksPage() {
                   <table className="w-full text-xs text-left whitespace-nowrap">
                     <thead className="bg-white text-slate-900 font-bold border-b border-slate-200">
                       <tr>
-                        {["title", "authorName", "category", "hardCopyPrice", "hardCopyStock", "read_credits", "download_credits", "description", "slug"].map((head) => (
+                        {/* 💡 coverImage হেডার যোগ করা হলো */}
+                        {["title", "authorName", "category", "hardCopyPrice", "hardCopyStock", "read_credits", "download_credits", "description", "slug", "coverImage"].map((head) => (
                           <th key={head} className="p-3 border-r border-slate-100 last:border-0">{head}</th>
                         ))}
                       </tr>
@@ -725,7 +773,9 @@ export default function AdminBooksPage() {
                         <td className="p-3 border-r border-slate-100 text-center font-bold">10</td>
                         <td className="p-3 border-r border-slate-100 text-center font-bold">20</td>
                         <td className="p-3 border-r border-slate-100 italic text-slate-400">Best islamic book...</td>
-                        <td className="p-3 text-emerald-600">paradoxical-sajid</td>
+                        <td className="p-3 text-emerald-600 border-r border-slate-100">paradoxical-sajid</td>
+                        {/* 💡 coverImage এর প্রিভিউ ডাটা */}
+                        <td className="p-3 text-blue-500 truncate max-w-[150px]">https://via...</td>
                       </tr>
                     </tbody>
                   </table>

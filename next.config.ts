@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: 'via.placeholder.com', // প্লেসহোল্ডার ইমেজের জন্যও এটা দরকার হতে পারে
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        pathname: '/**',
+      },
     ],
   },
 };

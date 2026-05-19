@@ -1,5 +1,6 @@
 import BookCard from "@/components/books/BookCard";
 import BookFilters from "@/components/books/BookFilters";
+import { unstable_noStore as noStore } from "next/cache";
 import PaginationControls from "@/components/books/PaginationControls";
 import connectToDatabase from "@/lib/db";
 import Book from "@/models/Book";
@@ -19,6 +20,7 @@ export default async function BooksPage({
     page?: string 
   }> 
 }) {
+  noStore();
   const { category, author, q, format, sort, page } = await searchParams;
 
   const currentPage = Number(page) || 1;
@@ -102,7 +104,7 @@ export default async function BooksPage({
 
             {serializedBooks.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   {serializedBooks.map((book) => (
                     <BookCard key={book._id} book={book} />
                   ))}

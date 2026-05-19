@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+// 💡 ক্যাশ বন্ধ করার জন্য BooksPage এর মতো noStore ইমপোর্ট করা হলো
+import { unstable_noStore as noStore } from "next/cache";
 import connectToDatabase from "@/lib/db";
 import Book from "@/models/Book";
 import { Button } from "@/components/ui/button";
@@ -29,19 +31,22 @@ export default async function BookDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  // 💡 BooksPage এর মতো এখানেও noStore() কল করা হলো, যা ক্যাশ মুছে ফেলবে
+  noStore();
+  
   // params কে await করে slug বের করে আনা হলো
   const { slug } = await params;
 
   await connectToDatabase();
 
-  // এখন params.slug এর বদলে সরাসরি slug ব্যবহার করা যাবে
+  // ডাটাবেস থেকে বই খোঁজা
   const book = await Book.findOne({ slug }).lean();
 
   if (!book) {
     return notFound();
   }
 
-  // **ফিক্স:** লেখকের নাম দিয়ে আসল লেখকের User ID খুঁজে বের করা
+  // লেখকের নাম দিয়ে আসল লেখকের User ID খুঁজে বের করা
   const actualAuthor = await User.findOne({
     name: { $regex: new RegExp(`^${book.authorName}$`, "i") },
     role: { $in: ["author", "admin"] },
@@ -49,7 +54,6 @@ export default async function BookDetailPage({
     .select("_id")
     .lean();
 
-  // ... (বই ফাইন্ড করার পর)
   const session = await getServerSession(authOptions);
   let hasDownloadAccess = false;
 
@@ -64,15 +68,18 @@ export default async function BookDetailPage({
     }
   }
 
-  // যদি আসল লেখকের প্রোফাইল না পাওয়া যায়, তবে আপলোডারের ID-ই ব্যবহার করবে
+  // যদি আসল লেখকের প্রোফাইল না পাওয়া যায়, তবে আপলোডারের ID-ই ব্যবহার করবে
   const authorProfileId = actualAuthor
     ? actualAuthor._id.toString()
     : book.authorId.toString();
 
+  // serializedBook এর ভেতরে ডেটা সাজানো
   const serializedBook = {
     ...book,
     _id: book._id.toString(),
+    title: book.title.toString(),
     authorId: book.authorId.toString(),
+    authorProfileId: authorProfileId, 
     createdAt: book.createdAt?.toString(),
     updatedAt: book.updatedAt?.toString(),
   };
@@ -86,7 +93,7 @@ export default async function BookDetailPage({
             <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900 aspect-[2/3] relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={serializedBook.coverImage}
+                src={serializedBook.coverImage || "https://via.placeholder.com/400x600"}
                 alt={serializedBook.title}
                 className="w-full h-full object-cover"
               />
@@ -125,8 +132,8 @@ export default async function BookDetailPage({
                 {serializedBook.language || "Bengali"}
               </span>
               <Separator orientation="vertical" className="h-5 bg-gray-200 dark:bg-gray-800" />
-              <div className="flex gap-1">
-                {(serializedBook.categories || []).map((cat:any, index:number) => (
+              <div className="flex gap-1 flex-wrap">
+                {(serializedBook.categories || []).map((cat: any, index: number) => (
                   <Badge key={index} variant="secondary" className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
                     {cat}
                   </Badge>
@@ -137,9 +144,9 @@ export default async function BookDetailPage({
             <Separator className="bg-gray-200 dark:bg-gray-800" />
 
             <div>
-              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-gray-100">বইয়ের সারাংশ</h3>
+              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-gray-100">বইয়ের সারাংশ</h3>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
-                {serializedBook.description}
+                {serializedBook.description || "এই বইটির কোনো সারাংশ যোগ করা হয়নি।"}
               </p>
             </div>
           </div>
@@ -155,15 +162,15 @@ export default async function BookDetailPage({
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">অনলাইনে পড়ুন:</span>
+                  <span className="text-gray-600 dark:text-gray-400">অনলাইনে পড়ুন:</span>
                   <span className="font-bold text-blue-700 dark:text-blue-400">
-                    {serializedBook.read_credits} Credits
+                    {serializedBook.read_credits || 0} Credits
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-gray-400">ডাউনলোড করুন:</span>
                   <span className="font-bold text-blue-400 dark:text-blue-300">
-                    {serializedBook.download_credits} Credits
+                    {serializedBook.download_credits || 0} Credits
                   </span>
                 </div>
               </div>
@@ -172,13 +179,13 @@ export default async function BookDetailPage({
                 <UnlockReadButton
                   bookId={serializedBook._id}
                   slug={serializedBook.slug}
-                  readCredits={serializedBook.read_credits}
+                  readCredits={serializedBook.read_credits || 0}
                 />
-                {book.pdfUrl && (
+                {serializedBook.pdfUrl && (
                   <div>
                     <DownloadButton
                       bookId={serializedBook._id}
-                      downloadCredits={serializedBook.download_credits}
+                      downloadCredits={serializedBook.download_credits || 0}
                       hasAccess={hasDownloadAccess}
                     />
                   </div>
@@ -197,7 +204,7 @@ export default async function BookDetailPage({
 
                 <div className="flex justify-between items-end">
                   <span className="text-3xl font-extrabold text-gray-900 dark:text-gray-50">
-                    ৳{serializedBook.hardCopyPrice}
+                    ৳{serializedBook.hardCopyPrice || 0}
                   </span>
                   {serializedBook.hardCopyStock > 0 ? (
                     <span className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -236,6 +243,7 @@ export default async function BookDetailPage({
           )}
         </div>
       </div>
+      
       {/* Book Reviews Section */}
       <div className="mt-16 max-w-4xl mx-auto">
         <BookReviews bookId={serializedBook._id} />

@@ -70,7 +70,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
             <div className="relative group">
               <div className="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
               <Avatar className="h-40 w-40 border-8 border-white dark:border-gray-900 shadow-2xl relative">
-                <AvatarImage src={author.avatar || ""} className="object-cover" />
+                <AvatarImage src={author.avatar || "https://upload.wikimedia.org/wikipedia/commons/8/85/Humayun_Ahmed_13Nov2010.jpg"} className="object-cover" />
                 <AvatarFallback className="text-5xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
                   {author.name?.charAt(0)}
                 </AvatarFallback>
