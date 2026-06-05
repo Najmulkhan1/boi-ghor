@@ -13,7 +13,7 @@ export default function AddressesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null); // এডিট করার জন্য নতুন স্টেট
+  const [editId, setEditId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     label: "বাসা",
@@ -41,7 +41,6 @@ export default function AddressesPage() {
       .catch((err) => console.error("Failed to load divisions", err));
   }, []);
 
-  // বিভাগ পরিবর্তন হলে জেলা আনা
   useEffect(() => {
     if (selectedDivision) {
       setLocLoading(true);
@@ -56,7 +55,6 @@ export default function AddressesPage() {
     }
   }, [selectedDivision]);
 
-  // জেলা পরিবর্তন হলে উপজেলা সেট করা
   useEffect(() => {
     if (selectedDistrict && districts.length > 0) {
       const distData = districts.find((d) => d.district === selectedDistrict);
@@ -80,7 +78,6 @@ export default function AddressesPage() {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  // ফর্ম রিসেট করার ফাংশন
   const resetForm = () => {
     setFormData({ label: "বাসা", fullName: "", phone: "", addressLine1: "", postalCode: "", isDefault: false });
     setSelectedDivision("");
@@ -90,9 +87,7 @@ export default function AddressesPage() {
     setShowForm(false);
   };
 
-  // এডিট বাটনে ক্লিক করার লজিক
   const handleEditClick = (addr: any) => {
-    // addressLine2 থেকে বিভাগ এবং উপজেলা আলাদা করা (Regex ব্যবহার করে)
     let division = "";
     let upazila = "";
     const match = addr.addressLine2?.match(/উপজেলা: (.*?), বিভাগ: (.*)/);
@@ -111,16 +106,15 @@ export default function AddressesPage() {
     });
 
     setSelectedDivision(division);
-    setSelectedDistrict(addr.city); // ডাটাবেসে city তেই জেলা সেভ করা আছে
+    setSelectedDistrict(addr.city);
     
-    // উপজেলা সেট করতে একটু দেরি করতে হবে কারণ জেলার API থেকে ডেটা আসতে সময় লাগে
     setTimeout(() => {
       setSelectedUpazila(upazila);
     }, 500);
 
     setEditId(addr._id);
     setShowForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" }); // ফর্মের কাছে নিয়ে যাবে
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubmitAddress = async (e: React.FormEvent) => {
@@ -136,7 +130,6 @@ export default function AddressesPage() {
       addressLine2: `উপজেলা: ${selectedUpazila}, বিভাগ: ${selectedDivision}`,
     };
 
-    // এডিট হলে PUT, নতুন হলে POST মেথড
     const method = editId ? "PUT" : "POST";
     const url = editId ? `/api/user/addresses?id=${editId}` : "/api/user/addresses";
 
@@ -147,11 +140,11 @@ export default function AddressesPage() {
     });
 
     if (res.ok) {
-      alert(editId ? "ঠিকানা আপডেট হয়েছে!" : "ঠিকানা সেভ হয়েছে!");
+      alert(editId ? "ঠিকানা আপডেট হয়েছে!" : "ঠিকানা সেভ হয়েছে!");
       resetForm();
       fetchAddresses();
     } else {
-      alert("সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      alert("সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     }
     setSaving(false);
   };
@@ -164,67 +157,70 @@ export default function AddressesPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-10 max-w-5xl">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <MapPin className="text-blue-600" /> আমার ঠিকানাগুলো
-          </h1>
-          <p className="text-gray-500 mt-1">আপনার সেভ করা ডেলিভারি অ্যাড্রেসগুলো পরিচালনা করুন</p>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-5">
+        <div className="flex items-center gap-3">
+          <div className="bg-indigo-500/20 p-3 rounded-xl text-indigo-400">
+            <MapPin className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold text-white">আমার ঠিকানাগুলো</h1>
+            <p className="text-slate-500 text-sm mt-1">আপনার সেভ করা ডেলিভারি অ্যাড্রেসগুলো পরিচালনা করুন</p>
+          </div>
         </div>
-        <Button onClick={() => showForm ? resetForm() : setShowForm(true)} className="bg-blue-600 hover:bg-blue-700 gap-2">
+        <Button onClick={() => showForm ? resetForm() : setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
           {showForm ? "ক্যানসেল করুন" : <><Plus className="w-4 h-4" /> নতুন ঠিকানা যোগ করুন</>}
         </Button>
       </div>
 
       {showForm && (
-        <Card className="mb-8 border-blue-100 shadow-sm bg-blue-50/30 animate-in fade-in slide-in-from-top-4">
-          <CardHeader>
-            <CardTitle>{editId ? "ঠিকানা আপডেট করুন" : "নতুন ঠিকানা যুক্ত করুন"}</CardTitle>
+        <Card className="border-slate-800 bg-slate-900 shadow-lg animate-in fade-in slide-in-from-top-4">
+          <CardHeader className="border-b border-slate-800 bg-slate-800/50">
+            <CardTitle className="text-white">{editId ? "ঠিকানা আপডেট করুন" : "নতুন ঠিকানা যুক্ত করুন"}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleSubmitAddress} className="space-y-6">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <Label htmlFor="label">লেবেল (যেমন: বাসা, অফিস)</Label>
-                  <Input id="label" placeholder="বাসা" value={formData.label} onChange={handleInputChange} />
+                  <Label htmlFor="label" className="text-slate-300">লেবেল (যেমন: বাসা, অফিস)</Label>
+                  <Input id="label" placeholder="বাসা" value={formData.label} onChange={handleInputChange} className="bg-slate-800 border-slate-700 text-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">সম্পূর্ণ নাম *</Label>
-                  <Input id="fullName" required placeholder="আপনার নাম" value={formData.fullName} onChange={handleInputChange} />
+                  <Label htmlFor="fullName" className="text-slate-300">সম্পূর্ণ নাম *</Label>
+                  <Input id="fullName" required placeholder="আপনার নাম" value={formData.fullName} onChange={handleInputChange} className="bg-slate-800 border-slate-700 text-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">মোবাইল নাম্বার *</Label>
-                  <Input id="phone" required placeholder="01XXX-XXXXXX" value={formData.phone} onChange={handleInputChange} />
+                  <Label htmlFor="phone" className="text-slate-300">মোবাইল নাম্বার *</Label>
+                  <Input id="phone" required placeholder="01XXX-XXXXXX" value={formData.phone} onChange={handleInputChange} className="bg-slate-800 border-slate-700 text-white" />
                 </div>
               </div>
 
-              <div className="p-4 border rounded-lg bg-white shadow-sm space-y-4">
-                <h3 className="font-semibold text-gray-700 mb-2">এরিয়া সিলেক্ট করুন *</h3>
+              <div className="p-5 border border-slate-800 rounded-xl bg-slate-800/30 space-y-4">
+                <h3 className="font-semibold text-white mb-2">এরিয়া সিলেক্ট করুন *</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>বিভাগ</Label>
+                    <Label className="text-slate-400 text-xs">বিভাগ</Label>
                     <select 
                       required
                       value={selectedDivision} 
                       onChange={(e) => { setSelectedDivision(e.target.value); setSelectedDistrict(""); setSelectedUpazila(""); }}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full text-sm rounded-lg p-2.5 h-10 bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                     >
                       <option value="">বিভাগ নির্বাচন করুন</option>
                       {divisions.map((div) => (
-                        <option key={div._id} value={div.division}>{div.division} (বিভাগ)</option>
+                        <option key={div._id} value={div.division}>{div.division}</option>
                       ))}
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label>জেলা</Label>
+                    <Label className="text-slate-400 text-xs">জেলা</Label>
                     <select 
                       required
                       disabled={!selectedDivision || locLoading}
                       value={selectedDistrict} 
                       onChange={(e) => { setSelectedDistrict(e.target.value); setSelectedUpazila(""); }}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                      className="w-full text-sm rounded-lg p-2.5 h-10 bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500 cursor-pointer disabled:opacity-50"
                     >
                       <option value="">জেলা নির্বাচন করুন</option>
                       {districts.map((dist) => (
@@ -233,13 +229,13 @@ export default function AddressesPage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label>উপজেলা</Label>
+                    <Label className="text-slate-400 text-xs">উপজেলা</Label>
                     <select 
                       required
                       disabled={!selectedDistrict || locLoading}
                       value={selectedUpazila} 
                       onChange={(e) => setSelectedUpazila(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                      className="w-full text-sm rounded-lg p-2.5 h-10 bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500 cursor-pointer disabled:opacity-50"
                     >
                       <option value="">উপজেলা নির্বাচন করুন</option>
                       {upazilas.map((upz, idx) => (
@@ -250,28 +246,28 @@ export default function AddressesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="addressLine1">গ্রাম / রাস্তা / বাসা নং *</Label>
-                  <Input id="addressLine1" required placeholder="উদাহরণ: বাড়ি #১০, রোড #৫, শান্তিনগর" value={formData.addressLine1} onChange={handleInputChange} />
+                  <Label htmlFor="addressLine1" className="text-slate-300">গ্রাম / রাস্তা / বাসা নং *</Label>
+                  <Input id="addressLine1" required placeholder="উদাহরণ: বাড়ি #১০, রোড #৫, শান্তিনগর" value={formData.addressLine1} onChange={handleInputChange} className="bg-slate-800 border-slate-700 text-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="postalCode">পোস্টাল কোড / জিপ কোড *</Label>
-                  <Input id="postalCode" required placeholder="১২০০" value={formData.postalCode} onChange={handleInputChange} />
+                  <Label htmlFor="postalCode" className="text-slate-300">পোস্টাল কোড / জিপ কোড *</Label>
+                  <Input id="postalCode" required placeholder="১২০০" value={formData.postalCode} onChange={handleInputChange} className="bg-slate-800 border-slate-700 text-white" />
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2 py-2">
+              <div className="flex items-center space-x-2 py-2 border-t border-slate-800 pt-4 mt-4">
                 <Switch 
                   id="isDefault" 
                   checked={formData.isDefault} 
                   onCheckedChange={(c) => setFormData({ ...formData, isDefault: c })} 
                 />
-                <Label htmlFor="isDefault" className="cursor-pointer font-medium text-blue-700">এটিকে আমার ডিফল্ট ঠিকানা হিসেবে সেট করুন</Label>
+                <Label htmlFor="isDefault" className="cursor-pointer font-medium text-indigo-400">এটিকে আমার ডিফল্ট ঠিকানা হিসেবে সেট করুন</Label>
               </div>
 
-              <Button type="submit" disabled={saving} className="bg-gray-900 text-white w-full md:w-auto px-8 h-12 text-lg">
-                {saving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> সেভ হচ্ছে...</> : (editId ? "আপডেট করুন" : "ঠিকানা সেভ করুন")}
+              <Button type="submit" disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto px-8 h-11">
+                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> সেভ হচ্ছে...</> : (editId ? "আপডেট করুন" : "ঠিকানা সেভ করুন")}
               </Button>
             </form>
           </CardContent>
@@ -279,38 +275,38 @@ export default function AddressesPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
+        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-indigo-400" /></div>
       ) : addresses.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {addresses.map((addr) => (
-            <Card key={addr._id} className={`relative overflow-hidden transition-all ${addr.isDefault ? "border-blue-500 ring-2 ring-blue-500 shadow-md bg-blue-50/10" : "border-gray-200"}`}>
+            <Card key={addr._id} className={`relative overflow-hidden bg-slate-900 transition-all ${addr.isDefault ? "border-indigo-500 ring-1 ring-indigo-500" : "border-slate-800"}`}>
               {addr.isDefault && (
-                <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-4 py-1 font-bold rounded-bl-xl shadow-sm">
+                <div className="absolute top-0 right-0 bg-indigo-500 text-white text-[10px] uppercase px-3 py-1 font-bold rounded-bl-lg shadow-sm">
                   ডিফল্ট
                 </div>
               )}
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2 mb-4">
-                  <Home className="w-5 h-5 text-gray-500" /> {addr.label || "ঠিকানা"}
+              <CardContent className="p-5">
+                <h3 className="font-bold text-lg text-white flex items-center gap-2 mb-4">
+                  <Home className="w-4 h-4 text-slate-500" /> {addr.label || "ঠিকানা"}
                 </h3>
-                <div className="space-y-3 text-sm text-gray-700 mb-6 bg-gray-50 p-4 rounded-lg">
-                  <p className="flex items-center gap-2 font-semibold"><User className="w-4 h-4 text-gray-400" /> {addr.fullName}</p>
-                  <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-gray-400" /> {addr.phone}</p>
-                  <div className="flex items-start gap-2 pt-2 border-t border-gray-200">
-                    <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" /> 
+                <div className="space-y-3 text-sm text-slate-400 mb-6 bg-slate-800/50 p-4 rounded-xl border border-slate-800">
+                  <p className="flex items-center gap-2 font-bold text-slate-300"><User className="w-4 h-4 text-slate-500" /> {addr.fullName}</p>
+                  <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-slate-500" /> {addr.phone}</p>
+                  <div className="flex items-start gap-2 pt-3 border-t border-slate-800">
+                    <MapPin className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" /> 
                     <p className="leading-relaxed">
-                      {addr.addressLine1} <br />
-                      <span className="text-gray-500">{addr.addressLine2}</span> <br />
-                      <span className="font-medium">{addr.city} - {addr.postalCode}</span>
+                      <span className="text-slate-300">{addr.addressLine1}</span> <br />
+                      <span className="text-xs text-slate-500">{addr.addressLine2}</span> <br />
+                      <span className="font-medium text-slate-400">{addr.city} - {addr.postalCode}</span>
                     </p>
                   </div>
                 </div>
-                <div className="flex justify-end pt-2 gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleEditClick(addr)} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200">
-                    <Edit className="w-4 h-4 mr-1" /> এডিট
+                <div className="flex justify-end gap-2 border-t border-slate-800 pt-4">
+                  <Button variant="outline" size="sm" onClick={() => handleEditClick(addr)} className="text-indigo-400 border-slate-700 hover:text-white hover:bg-slate-800">
+                    <Edit className="w-3.5 h-3.5 mr-1.5" /> এডিট
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(addr._id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200">
-                    <Trash2 className="w-4 h-4 mr-1" /> মুছুন
+                  <Button variant="outline" size="sm" onClick={() => handleDelete(addr._id)} className="text-rose-400 border-slate-700 hover:text-rose-300 hover:bg-slate-800">
+                    <Trash2 className="w-3.5 h-3.5 mr-1.5" /> মুছুন
                   </Button>
                 </div>
               </CardContent>
@@ -318,12 +314,10 @@ export default function AddressesPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MapPin className="w-8 h-8 text-gray-400" />
-          </div>
-          <p className="text-gray-600 text-lg font-medium">আপনার কোনো ঠিকানা সেভ করা নেই!</p>
-          <p className="text-gray-400 text-sm mt-1">হার্ডকপি অর্ডার করার জন্য উপরে 'নতুন ঠিকানা যোগ করুন' এ ক্লিক করুন।</p>
+        <div className="text-center py-20 bg-slate-900 border border-dashed border-slate-800 rounded-2xl">
+          <MapPin className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+          <p className="text-white text-lg font-bold">আপনার কোনো ঠিকানা সেভ করা নেই!</p>
+          <p className="text-slate-500 text-sm mt-1">হার্ডকপি অর্ডার করার জন্য উপরে 'নতুন ঠিকানা যোগ করুন' এ ক্লিক করুন।</p>
         </div>
       )}
     </div>

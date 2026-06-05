@@ -2,18 +2,42 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Star, ShoppingBag, TrendingUp } from "lucide-react";
+import { Star, ShoppingBag, TrendingUp, BookOpen } from "lucide-react";
+import Link from "next/link";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const books = [
-  { id: 1, title: "প্যারাডক্সিক্যাল সাজিদ", author: "আরিফ আজাদ", price: 300, rating: 4.8, tag: "বেস্টসেলার", cover: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop" },
-  { id: 2, title: "বেলা ফুরাবার আগে", author: "আরিফ আজাদ", price: 250, rating: 4.9, tag: "নতুন", cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=400&auto=format&fit=crop" },
-  { id: 3, title: "Atomic Habits", author: "James Clear", price: 350, rating: 5.0, tag: "ট্রেন্ডিং", cover: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=400&auto=format&fit=crop" },
-  { id: 4, title: "Think & Grow Rich", author: "Napoleon Hill", price: 400, rating: 4.7, tag: "ক্লাসিক", cover: "https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=400&auto=format&fit=crop" },
-];
+interface Book {
+  _id: string;
+  title: string;
+  slug: string;
+  authorName: string;
+  coverImage: string;
+  hardCopyPrice: number;
+  read_credits: number;
+  averageRating: number;
+  totalReviews: number;
+  hardCopyAvailable: boolean;
+  categories: string[];
+}
 
-export default function TrendingSection() {
+interface TrendingSectionProps {
+  books: Book[];
+}
+
+const TAG_MAP: Record<string, string> = {
+  "Islamic": "ইসলামিক",
+  "Self-Help": "সেলফ-হেল্প",
+  "Novel": "উপন্যাস",
+  "Programming": "প্রোগ্রামিং",
+  "Thriller": "থ্রিলার",
+  "Science": "বিজ্ঞান",
+  "Children": "শিশু",
+  "History": "ইতিহাস",
+  "Biography": "জীবনী",
+};
+
+export default function TrendingSection({ books }: TrendingSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -79,7 +103,11 @@ export default function TrendingSection() {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [books]);
+
+  if (!books || books.length === 0) {
+    return null;
+  }
 
   return (
     <section ref={sectionRef} className="py-28 bg-white dark:bg-slate-950">
@@ -100,12 +128,12 @@ export default function TrendingSection() {
               পাঠকদের পছন্দের তালিকা থেকে বেছে নিন আপনার পরবর্তী বই।
             </p>
           </div>
-          <a
+          <Link
             href="/books"
             className="text-indigo-600 dark:text-indigo-400 font-bold text-lg hover:underline font-baloo flex items-center gap-1"
           >
             সব দেখুন →
-          </a>
+          </Link>
         </div>
 
         {/* Grid */}
@@ -114,56 +142,73 @@ export default function TrendingSection() {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
           style={{ perspective: 1000 }}
         >
-          {books.map((book) => (
-            <div
-              key={book.id}
-              className="book-card group bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-shadow duration-500 cursor-pointer"
-              style={{ willChange: "transform" }}
-            >
-              {/* Cover */}
-              <div className="relative aspect-[3/4] overflow-hidden">
-                <img
-                  src={book.cover}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  alt={book.title}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-5">
-                  <button className="w-full py-2.5 rounded-xl bg-white/90 text-slate-900 font-bold text-sm hover:bg-indigo-600 hover:text-white transition-colors font-baloo">
-                    এখনই কিনুন
-                  </button>
-                </div>
-                <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest">
-                  {book.tag}
-                </span>
-                <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 dark:bg-slate-800/80 flex items-center justify-center text-slate-600 hover:text-rose-500 transition-colors backdrop-blur-sm">
-                  ♡
-                </button>
-              </div>
-
-              {/* Info */}
-              <div className="p-5 space-y-2">
-                <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest font-hind">
-                  {book.author}
-                </p>
-                <h3 className="font-bold text-lg font-noto text-slate-900 dark:text-white line-clamp-1">
-                  {book.title}
-                </h3>
-                <div className="flex items-center justify-between pt-1">
-                  <div>
-                    <span className="text-xl font-black text-slate-900 dark:text-white">৳{book.price}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
-                      <Star className="w-3 h-3 fill-current" /> {book.rating}
-                    </div>
-                    <button className="p-2 rounded-xl bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white transition-colors">
-                      <ShoppingBag className="w-4 h-4" />
+          {books.map((book) => {
+            const tag =
+              book.categories && book.categories.length > 0
+                ? (TAG_MAP[book.categories[0]] ?? book.categories[0])
+                : "নতুন";
+            const price = book.hardCopyAvailable
+              ? book.hardCopyPrice
+              : book.read_credits;
+            const priceLabel = book.hardCopyAvailable ? `৳${price}` : `${price} ক্রেডিট`;
+            return (
+              <Link
+                href={`/books/${book.slug}`}
+                key={book._id}
+                className="book-card group bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-shadow duration-500 cursor-pointer block"
+                style={{ willChange: "transform" }}
+              >
+                {/* Cover */}
+                <div className="relative aspect-[3/4] overflow-hidden">
+                  <img
+                    src={book.coverImage}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    alt={book.title}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "https://via.placeholder.com/300x400/e2e8f0/64748b?text=No+Cover";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-5">
+                    <button className="w-full py-2.5 rounded-xl bg-white/90 text-slate-900 font-bold text-sm hover:bg-indigo-600 hover:text-white transition-colors font-baloo flex items-center justify-center gap-2">
+                      <BookOpen className="w-4 h-4" /> এখনই পড়ুন
                     </button>
                   </div>
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest">
+                    {tag}
+                  </span>
                 </div>
-              </div>
-            </div>
-          ))}
+
+                {/* Info */}
+                <div className="p-5 space-y-2">
+                  <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest font-hind line-clamp-1">
+                    {book.authorName}
+                  </p>
+                  <h3 className="font-bold text-lg font-noto text-slate-900 dark:text-white line-clamp-2 leading-tight">
+                    {book.title}
+                  </h3>
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <span className="text-xl font-black text-slate-900 dark:text-white">
+                        {priceLabel}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
+                        <Star className="w-3 h-3 fill-current" />
+                        {book.averageRating > 0
+                          ? book.averageRating.toFixed(1)
+                          : "নতুন"}
+                      </div>
+                      <button className="p-2 rounded-xl bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white transition-colors">
+                        <ShoppingBag className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

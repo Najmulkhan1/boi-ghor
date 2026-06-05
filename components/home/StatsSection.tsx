@@ -5,17 +5,23 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const stats = [
-  { end: 50000, suffix: "+", label: "সক্রিয় পাঠক", icon: "👥", color: "from-indigo-500 to-violet-600" },
-  { end: 12500, suffix: "+", label: "বইয়ের সংগ্রহ", icon: "📚", color: "from-amber-500 to-orange-500" },
-  { end: 64, suffix: "টি", label: "জেলায় ডেলিভারি", icon: "🚚", color: "from-emerald-500 to-teal-600" },
-  { end: 98, suffix: "%", label: "সন্তুষ্ট গ্রাহক", icon: "⭐", color: "from-rose-500 to-pink-600" },
-];
+interface StatsSectionProps {
+  totalUsers: number;
+  totalBooks: number;
+  totalAuthors: number;
+}
 
-export default function StatsSection() {
+export default function StatsSection({ totalUsers, totalBooks, totalAuthors }: StatsSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const pencilLineRef = useRef<SVGPathElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
+
+  const stats = [
+    { end: totalUsers, suffix: "+", label: "সক্রিয় পাঠক", icon: "👥", color: "from-indigo-500 to-violet-600" },
+    { end: totalBooks, suffix: "+", label: "বইয়ের সংগ্রহ", icon: "📚", color: "from-amber-500 to-orange-500" },
+    { end: 64, suffix: "টি", label: "জেলায় ডেলিভারি", icon: "🚚", color: "from-emerald-500 to-teal-600" },
+    { end: totalAuthors, suffix: "+", label: "লেখক", icon: "✍️", color: "from-rose-500 to-pink-600" },
+  ];
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -67,7 +73,8 @@ export default function StatsSection() {
       });
     }, sectionRef);
     return () => ctx.revert();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalUsers, totalBooks, totalAuthors]);
 
   return (
     <section ref={sectionRef} className="relative py-20 bg-white dark:bg-slate-950 overflow-hidden">

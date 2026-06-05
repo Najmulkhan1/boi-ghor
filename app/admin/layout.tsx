@@ -25,19 +25,19 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-gray-950 flex flex-col md:flex-row">
-      {/* মোবাইলের জন্য টপ নেভিগেশন (Logo + Menu Button) */}
+    // "dark" class forces dark mode across the entire admin panel
+    <div className="dark min-h-screen bg-[#0f1117] flex flex-col md:flex-row">
+      {/* মোবাইলের জন্য টপ নেভিগেশন */}
       <MobileAdminNav />
 
-      {/* ডেস্কটপ সাইডবার (Sticky & Hidden on Mobile) */}
-      <aside className="hidden md:flex w-72 flex-col fixed inset-y-0 z-50 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+      {/* ডেস্কটপ সাইডবার */}
+      <aside className="hidden md:flex w-72 flex-col fixed inset-y-0 z-50 border-r border-slate-800 bg-[#0f172a] shadow-xl">
         <AdminSidebar />
       </aside>
 
-      {/* মেইন কন্টেন্ট এরিয়া */}
-      <main className="flex-1 md:pl-72 min-h-screen transition-all duration-300">
+      {/* মেইন কন্টেন্ট এরিয়া */}
+      <main className="flex-1 md:pl-72 min-h-screen bg-[#0f1117] transition-all duration-300">
         <div className="p-4 md:p-10 max-w-7xl mx-auto">
-          {/* Page Wrapper for clean spacing */}
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {children}
           </div>
@@ -45,4 +45,4 @@ export default async function AdminLayout({
       </main>
     </div>
   );
-} 
+}
