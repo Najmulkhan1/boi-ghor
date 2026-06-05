@@ -6,14 +6,16 @@ import { Truck, Headphones, ShieldCheck, Gift } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const categories = [
-  { name: "ইসলামিক বই", emoji: "🕌", color: "from-emerald-500 to-teal-600", count: "২,৩০০+" },
-  { name: "উপন্যাস", emoji: "📖", color: "from-rose-500 to-pink-600", count: "১,৮০০+" },
-  { name: "প্রোগ্রামিং", emoji: "💻", color: "from-indigo-500 to-violet-600", count: "৮৫০+" },
-  { name: "থ্রিলার", emoji: "🔍", color: "from-amber-500 to-orange-600", count: "৬৫০+" },
-  { name: "শিশু সাহিত্য", emoji: "🌈", color: "from-sky-500 to-cyan-600", count: "৫০০+" },
-  { name: "বিজ্ঞান", emoji: "🔬", color: "from-purple-500 to-fuchsia-600", count: "৪২০+" },
-];
+interface Category {
+  name: string;
+  count: number;
+  emoji: string;
+  color: string;
+}
+
+interface CategoriesSectionProps {
+  categories: Category[];
+}
 
 const features = [
   { icon: Truck, title: "দ্রুত ডেলিভারি", desc: "৬৪ জেলায় ৩-৫ দিনে ডেলিভারি" },
@@ -22,7 +24,7 @@ const features = [
   { icon: Gift, title: "গিফট র‍্যাপিং", desc: "প্রিয়জনকে উপহার দিন সুন্দরভাবে" },
 ];
 
-export default function CategoriesAndFeatures() {
+export default function CategoriesAndFeatures({ categories }: CategoriesSectionProps) {
   const catSectionRef = useRef<HTMLElement>(null);
   const catHeaderRef = useRef<HTMLDivElement>(null);
   const catGridRef = useRef<HTMLDivElement>(null);
@@ -105,7 +107,7 @@ export default function CategoriesAndFeatures() {
     });
 
     return () => ctx.revert();
-  }, []);
+  }, [categories]);
 
   return (
     <>
@@ -127,7 +129,7 @@ export default function CategoriesAndFeatures() {
           >
             {categories.map((cat, i) => (
               <a
-                href="/books"
+                href={`/books?category=${encodeURIComponent(cat.name)}`}
                 key={i}
                 className={`cat-card group relative bg-gradient-to-br ${cat.color} p-7 rounded-[2rem] text-white overflow-hidden cursor-pointer shadow-lg hover:scale-[1.04] hover:-translate-y-1 transition-transform duration-300`}
               >

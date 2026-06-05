@@ -391,12 +391,20 @@ export default function AdminBooksPage() {
     <div className="space-y-6">
       
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-b pb-4">
-        <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
-          <Library className="text-indigo-600" /> বই ও স্টক ম্যানেজমেন্ট
-        </h1>
-        <div className="flex gap-3 w-full md:w-auto">
-          {/* 💡 এখানে Link এর বদলে onClick দিয়ে Add Modal Open করা হয়েছে */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-800 pb-5">
+        <div className="flex items-center gap-3">
+          <div className="bg-violet-500/20 p-3 rounded-xl text-violet-400">
+            <Library className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
+              বই ও স্টক ম্যানেজমেন্ট
+              <span className="text-sm bg-slate-800 border border-slate-700 text-slate-400 px-3 py-0.5 rounded-full font-medium">{books.length} টি</span>
+            </h1>
+            <p className="text-sm text-slate-500">নতুন বই যোগ করুন ও হার্ডকপি স্টক আপডেট করুন।</p>
+          </div>
+        </div>
+        <div className="flex gap-3 w-full md:w-auto flex-wrap">
           <Button 
             onClick={() => setIsAddModalOpen(true)}
             className="bg-indigo-600 hover:bg-indigo-700 gap-2 whitespace-nowrap"
@@ -411,20 +419,19 @@ export default function AdminBooksPage() {
             <FileSpreadsheet className="w-4 h-4" /> Bulk Add (CSV)
           </Button>
 
-          {/* 💡 Export CSV Button */}
           <Button
             onClick={exportBooksToCSV}
             variant="outline"
-            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-2 whitespace-nowrap font-bold"
+            className="border-slate-700 text-slate-300 hover:bg-slate-800 gap-2 whitespace-nowrap"
           >
             <Download className="w-4 h-4" /> Export CSV
           </Button>
 
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <Input
               placeholder="বই বা লেখকের নাম..."
-              className="pl-10 h-10"
+              className="pl-10 h-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -433,19 +440,19 @@ export default function AdminBooksPage() {
       </div>
 
       {/* Main Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 border-b text-slate-600 text-[10px] uppercase tracking-widest font-bold">
+            <tr className="bg-slate-800/70 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-bold">
               <th className="px-6 py-4">বই ও লেখক</th>
               <th className="px-6 py-4">হার্ডকপি</th>
               <th className="px-6 py-4">স্টক (Stock)</th>
               <th className="px-6 py-4 text-center">সম্পূর্ণ এডিট</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-800">
             {filteredBooks.map((book) => (
-              <tr key={book._id} className="hover:bg-slate-50/50 transition-colors">
+              <tr key={book._id} className="hover:bg-slate-800/40 transition-colors">
                 <td className="px-6 py-4 flex items-center gap-3">
                   <img
                     src={book.coverImage || "https://via.placeholder.com/150"}
@@ -453,8 +460,8 @@ export default function AdminBooksPage() {
                     alt=""
                   />
                   <div>
-                    <p className="text-sm font-bold text-slate-900 line-clamp-1">{book.title}</p>
-                    <p className="text-xs text-indigo-600 font-medium">{book.authorName}</p>
+                    <p className="text-sm font-bold text-white line-clamp-1">{book.title}</p>
+                    <p className="text-xs text-indigo-400 font-medium">{book.authorName}</p>
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -465,18 +472,18 @@ export default function AdminBooksPage() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <Package className={`w-4 h-4 ${book.hardCopyStock < 5 ? "text-red-500" : "text-slate-400"}`} />
+                    <Package className={`w-4 h-4 ${book.hardCopyStock < 5 ? "text-red-400" : "text-slate-600"}`} />
                     <Input
                       type="number"
                       disabled={!book.hardCopyAvailable}
                       defaultValue={book.hardCopyStock || 0}
-                      className={`w-20 h-8 text-xs font-bold ${book.hardCopyStock < 5 ? "border-red-300 bg-red-50 text-red-700" : ""}`}
+                      className={`w-20 h-8 text-xs font-bold bg-slate-800 border-slate-700 text-white ${book.hardCopyStock < 5 ? "!border-red-500/50 !bg-red-500/10 !text-red-400" : ""}`}
                       onBlur={(e) => {
                         const val = Number(e.target.value);
                         if (val !== book.hardCopyStock) handleQuickUpdate(book._id, { hardCopyStock: val });
                       }}
                     />
-                    {updating === book._id && <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />}
+                    {updating === book._id && <Loader2 className="w-3 h-3 animate-spin text-indigo-400" />}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
@@ -484,7 +491,7 @@ export default function AdminBooksPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => { setSelectedBook({ ...book }); setIsModalOpen(true); }}
-                    className="gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                    className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
                   >
                     <Edit3 className="w-3.5 h-3.5" /> Full Edit
                   </Button>

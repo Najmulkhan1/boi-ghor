@@ -8,7 +8,6 @@ import { signOut } from "next-auth/react";
 export default function DashboardSidebar() {
   const pathname = usePathname();
 
-  // ড্যাশবোর্ডের মেনু লিস্ট
   const navItems = [
     { name: "প্রোফাইল", href: "/dashboard", icon: User },
     { name: "আমার লাইব্রেরি", href: "/dashboard/library", icon: BookOpen },
@@ -19,7 +18,7 @@ export default function DashboardSidebar() {
   ];
 
   return (
-    <div className="w-full md:w-64 bg-white border border-gray-100 flex flex-col p-4 shadow-sm rounded-2xl">
+    <div className="w-full bg-[#161b27] border border-slate-800 flex flex-col p-3 rounded-2xl">
       <div className="space-y-1 flex-grow">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -29,26 +28,26 @@ export default function DashboardSidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-sm ${
                 isActive
-                  ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-blue-600"
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40"
+                  : "text-slate-400 hover:bg-slate-800/60 hover:text-white"
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? "text-blue-600" : "text-gray-400"}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-indigo-400"}`} />
               {item.name}
             </Link>
           );
         })}
       </div>
 
-      {/* Logout Button */}
-      <div className="pt-4 border-t border-gray-100 mt-6">
+      {/* Logout */}
+      <div className="pt-3 border-t border-slate-800 mt-4">
         <button
           onClick={() => signOut({ callbackUrl: "/auth/login" })}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-red-600 hover:bg-red-50 transition-colors text-left"
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-4 h-4" />
           লগআউট
         </button>
       </div>

@@ -7,7 +7,12 @@ import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  totalBooks: number;
+  totalUsers: number;
+}
+
+export default function HeroSection({ totalBooks, totalUsers }: HeroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const badgeRef = useRef<HTMLDivElement>(null);
   const badgeCircleRef = useRef<SVGEllipseElement>(null);
@@ -158,7 +163,7 @@ export default function HeroSection() {
               ))}
             </div>
             <div>
-              <p className="font-bold text-slate-900 dark:text-white text-sm">৫০,০০০+ সক্রিয় পাঠক</p>
+              <p className="font-bold text-slate-900 dark:text-white text-sm">{totalUsers.toLocaleString()}+ সক্রিয় পাঠক</p>
               <p className="text-xs text-slate-500 dark:text-slate-500">আমাদের সাথে আছেন</p>
             </div>
           </div>
@@ -173,7 +178,7 @@ export default function HeroSection() {
             </div>
             <div ref={badge1Ref} className="absolute -top-7 -left-12 bg-white dark:bg-slate-800 rounded-2xl px-4 py-3 shadow-2xl flex items-center gap-3 border border-slate-100 dark:border-slate-700">
               <span className="text-2xl">📚</span>
-              <div><p className="font-black text-lg font-noto leading-none">১২,৫০০+</p><p className="text-xs text-slate-500 font-hind mt-0.5">বইয়ের সংগ্রহ</p></div>
+              <div><p className="font-black text-lg font-noto leading-none">{totalBooks.toLocaleString()}+</p><p className="text-xs text-slate-500 font-hind mt-0.5">বইয়ের সংগ্রহ</p></div>
             </div>
             <div ref={badge2Ref} className="absolute -bottom-5 -right-10 bg-indigo-600 text-white rounded-2xl px-4 py-3 shadow-2xl">
               <p className="font-black text-lg font-noto leading-none">৪.৯ ★</p>
