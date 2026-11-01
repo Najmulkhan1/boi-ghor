@@ -41,3 +41,13 @@ next-env.d.ts
 
 .vercel
 config.bat
+
+# Environment variables & secrets (added by GitHub Guardian)
+.env
+.env.*
+*.env
+!.env.example
+!.env.sample
+.envrc
+.venv/
+venv/
